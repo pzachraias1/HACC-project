@@ -1,0 +1,141 @@
+{%extends "base.html"%}
+
+{%block content %}
+
+<style>
+    .submitBtnStyle {
+        background-color: #237d68;
+        color: aliceblue;
+    }
+
+    .submitBtnStyle:hover {
+        background-color: #175144;
+        transition: .3s;
+    }
+
+    #short-box {
+        display: none;
+    }
+
+    #verification{
+        display: none;
+    }
+</style>
+
+<div class="container box-spcae url-box" style="border: 1px solid #237d68; height: auto;">
+    <h1>Hawaii URL Shortener</h1>
+    <form id="url-form">
+        {% csrf_token %}
+        <div class="form-group box-spcae">
+            <label id="urlLabel" for="url">Enter URL</label>
+
+            <div class="input-group">
+                <input type="url" class="form-control" id="longLink" name="longLink" aria-describedby="inputUrl"
+                    placeholder="Enter URL with a .gov domain (eg. hawaii.gov)">
+                <div class="input-group-append">
+                    <button type="submit" class="btn submitBtnStyle" id="submit-btn-function">Submit</button>
+                </div>
+        </div>
+            <br>
+                <input type="checkbox" id="veri" name="veri" onclick="showVerification()">
+                <label for="veri">Require verification</label><br>
+                <div id="verification">
+                    <label for="veripass">Password:</label>
+                    <input type="password" id="veripass" name="veripass"><br><br>
+                </div>
+        <div class="form-group box-spcae">
+            <label for="urlOutput">Shortened URL</label>
+            <div id = "short-box">
+                <h4 id="short-url-display"></h4>
+                <div id="">
+                    <button name="copy" class="btn submitBtnStyle copy-btn" id="copy-btn">Copy</button>
+                </div>
+            </div>
+        </div>
+           
+    </form>
+</div>
+
+<script>
+    var checkBox = document.getElementById("veri");
+    var text = document.getElementById("verification");
+    var textbox = document.getElementById("veripass");
+    var hostname = "{{hostname}}"
+
+    function showVerification() {
+      if (checkBox.checked == true){
+        text.style.display = "block";
+      } else {
+        text.style.display = "none";
+        textbox.value = "";
+      }
+    }
+
+    $('#url-form').ready(function () {
+        $('#submit-btn-function').click(function (e) {
+            e.preventDefault();
+            var s = document.getElementById("short-box")
+            var h4Style = document.getElementById("short-url-display")
+            var scBox = document.getElementById("short-copy-box")
+            s.style.display ="none"
+            h4Style.style = "color:black;"
+            $.ajax({
+                type: 'POST',
+                url: '/shorten',
+                data: {
+                    link: $('#longLink').val(),
+                    pass: $('#veripass').val(),
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                },
+                success: function (data) {
+                    if (data.includes("sCode")){
+                        alert("The link you have provided already exists. Please note that the initial short link will be provided.");
+                        text = data.slice(5);
+                        $('h4').html("Here is the Existing Short URL: "+text)
+                        h4Style.style = "color:red;"
+                        s.style.display = "inline"
+                        checkBox.checked = false;
+                        textbox.value = "";
+                    }
+                    else if(data == 'error'){
+                        alert("Please provide a link containing the .gov domain!");
+                        s.style.display = "none"
+                        checkBox.checked = false;
+                        textbox.value = "";
+                        $('h4').html("")
+                    }
+                    else if (data == "Bad"){
+                        alert("The link you have provide is Bad. Please provide another link");
+                        s.style.display = "none"
+                        checkBox.checked = false;
+                        textbox.value = "";
+                        $('h4').html("")
+                    }
+                    else if (data == "No Server"){
+                        alert("The link does not exist. Provide check for mispell or provide another link");
+                        s.style.display = "none"
+                        checkBox.checked = false;
+                        textbox.value = "";
+                        $('h4').html("")
+                    }
+                    else if (data != "error"){
+                        $('h4').html(data)
+                        s.style.display = "inline"
+                        checkBox.checked = false;
+                        textbox.value = "";
+                    }
+                }
+            });
+        })
+
+
+        $('#copy-btn').click(function (e) {
+            e.preventDefault();
+            $(this).removeClass().addClass("btn btn-success").html("Copied")
+            var text = document.getElementById('short-url-display').innerHTML.slice(-5);
+            navigator.clipboard.writeText(hostname + '/'+text);
+        })
+    })
+</script>
+
+{%endblock%}

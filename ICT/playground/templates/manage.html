@@ -1,0 +1,513 @@
+{%extends "base.html"%}
+
+{%block content %}
+<style>
+    .searchStyle {
+        color: #fff;
+        background-color: #237d68;
+        border-color: #237d68;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border: 1px solid transparent;
+    }
+
+    .searchStyle:hover {
+        cursor: pointer;
+        background-color: #1c6856;
+        transition: .3s;
+    }
+
+    .table-header {
+        color: #77b9a9;
+        background-color: rgb(49, 49, 49);
+    }
+
+    .more-btn {
+        color: #1c6856;
+        border-radius: 5px;
+        border: solid 1.5px #1c6856;
+        background-color: transparent;
+        transition: .5s;
+    }
+
+    .more-btn:hover {
+        color: white;
+        border-radius: 5px;
+        border: solid 1.5px white;
+        background-color: #1c6856;
+        transition: .5s;
+    }
+
+    .more-btn-disable{
+        color: #1c6856;
+        border-radius: 5px;
+        border: solid 1.5px #1c6856;
+        background-color: transparent;
+    }
+
+    .ip-display {
+        background-color: white;
+        visibility:collapse;
+    }
+
+    .ip-display {
+        border: transparent;
+        padding-bottom: 30px;
+        text-size-adjust: 20;
+    }
+
+    .table-style{
+        color: #1c6856;
+    }
+
+    /* ---------------------Pop up for the IP address -------------------------- */
+    .modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+    }
+
+    /* The Close Button */
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+<div class="input-group container" style="padding-left: 0px; padding-top: 30px; display: flex;">
+    {% csrf_token %}
+    <input type="search-field" class="form-control" name="searchfield" id="searchfield"
+        placeholder="Type here to Search" search-input>
+    <div class="input-group-prepend">
+        <button type="button" class="btn searchStyle" id="search" name="search" style ="z-index: 0;" search-btn>Search</button>
+        <button type="button" class="btn searchStyle" id="reset" name="reset" style ="z-index: 0;">Reset
+            Search</button>
+    </div>
+</div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="" name="password-box" style="text-align: center; padding-bottom:20px;">
+            <h4 class="" id = "password-display">Test</h4>
+            <button class="btn btn-primary copy-password" id="copy-password" name ="copy-password">Copy Password</button>
+        </div>
+        <div id="myIPTable" style="width:100%;max-width:700px" class="container">
+            <table class="table table-light table-bordered" style="padding-top: 20px;">
+                <thead>
+                    <tr class="thead-light">
+                        <th>Visited</th>
+                        <th>Object ID</th>
+                        <th>IP Address</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody ip-container>
+                    <template data-ip-template>
+                        <tr class = "ip-tr" name="ip-row">
+                            <td class="visited-td" visited-content></td>
+                            <td class="ip-td" id-content></td>
+                            <td class="ip-td" ip-content></td>
+                            <td class="location-td" location-content></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- <div>
+    <button class="updateStatus btn btn-primary">Test</button>
+</div> -->
+
+<div class="table-responsive-sm" style="padding: 30px;">
+    <!-- <button class="btn btn-check-url">Check URLs</button> -->
+    <table class="table table-body" style="width: 100%;">
+        <thead>
+            <tr class="table-header">
+                <th style="text-align: center;">Creation Date</th>
+                <th style="text-align: center;">Visited</th>
+                <th style="text-align: center;">Status</th>
+                <th class="short-url-head">Short URL</th>
+                <th class="long-url-head" colspan="3"
+                    style="border-left-style: solid;border-left-color: rgba(121, 121, 121, 0.686)">Long
+                    URL</th>
+            </tr>
+        </thead>
+        <tbody class="table-body">
+            {%for instance in object_list %}
+            <tr class="record" name="record" id={{instance.shortCode}} style="width: 10%;">
+                <td style="text-align: center;" style="width: 10%;">{{instance.creationDate}}</td>
+                <td style="text-align: center;" style="width: 10%;">{{instance.clicks}}</td>
+                <td style="text-align: center;" id = {{instance.shortCode}}{{instance.id}} style="width: 20%;">
+                    
+                    {%if instance.status == "Good"%}
+                    <span class="badge badge-success" name="status-bar" statusBar={{instance.shortCode}}{{instance.id}} >{{instance.status}}</span>
+                    {%elif instance.status == "Bad"%}
+                    <span class="badge badge-danger" name="status-bar" statusBar={{instance.shortCode}}{{instance.id}}>{{instance.status}}</span>
+                    {%elif instance.status == "No Server"%}
+                    <span class="badge badge-danger" name="status-bar" statusBar={{instance.shortCode}}{{instance.id}}>{{instance.status}}</span>
+                    {%else%}
+                    <span class="badge badge-warning" name="status-bar" statusBar={{instance.shortCode}}{{instance.id}}>{{instance.status}}</span>
+                    {%endif%}
+                
+                </td>
+                <td class="">{{ hostname }}/{{instance.shortCode}}</td>
+                <td colspan="2" class={{instance.shortCode}} style="border-left-style: solid; border-left-color: rgba(121, 121, 121, 0.686); width: 40%;" data-id = {{instance.shortCode}}>
+                    <p style="display: none;" class = "longlinkClass" id = {{instance.shortCode}}p longLinkAttr = {{instance.longLink}} pAttr = {{instance.shortCode}}p>{{instance.longLink}} {{instance.status}}</p>
+                    {% if instance.longLink|length > 40%}
+                    {{instance.longLink|slice:"0:40"}}....................
+                    {%else%}
+                    {{instance.longLink}}
+                    {%endif%}
+                </td>
+                <td class="" colspan="1" style="text-align: right;" style="width: 10%">
+                    <a href="{%url 'delete_data' instance.id%}" id="delete" class=" delete btn btn-danger"
+                    style="height:35px; opacity: 100%;">Delete</a>
+
+                    {%if instance.status == "Good"%}
+                        <button copyStatus={{instance.shortCode}}copy name="copy" class="btn btn-primary copy-btn" id={{instance.shortCode}}copy style="height:35px;"
+                        short-add={{instance.shortCode}}>Copy</button>
+                        <button moreStatus={{instance.shortCode}}more name = "show-ip" class="btn more-btn" id = {{instance.shortCode}}more more={{instance.id}}>More</button>
+                    {%elif instance.status == "Pending"%}
+                        <button copyStatus={{instance.shortCode}}copy name="copy" class="btn btn-primary copy-btn" id={{instance.shortCode}}copy style="height:35px;"
+                        short-add={{instance.shortCode}}>Copy</button>
+                        <button moreStatus={{instance.shortCode}}more name = "show-ip" class="btn more-btn" id = {{instance.shortCode}}more more={{instance.id}}>More</button>
+                    {%else%}
+                        <button copyStatus={{instance.shortCode}}copy name="copy" class="btn btn-primary copy-btn" id={{instance.shortCode}}copy style="height:35px;" disabled>Copy</button>
+                        <button moreStatus={{instance.shortCode}}more name = "show-ip" class="btn more-btn-disable" id = {{instance.shortCode}}more disabled>More</button>
+                    {%endif%}
+
+                    <!-- <a href="{%url 'status_get' instance.id%}" class="btn more-btn check" name="check-btn">Check</a> -->
+                    <button class="btn more-btn updateStatus" name="check-btn" long-url={{instance.longLink}} url-id = {{instance.id}} status-link-check = "{{instance.shortCode}}{{instance.id}}">Check</button>
+                </td>
+            </tr>
+            {%endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    var myHostName = "{{hostname}}";
+
+    const copyBtn = [...document.getElementsByName('copy')]
+    const copyBtn2 = [...document.getElementsByName('copy')]
+    const showip = [...document.getElementsByName('show-ip')]
+    const rowip = [...document.getElementsByName('ip')]
+    // const longlinkName = [...document.getAttribute('search-compare')]
+    // console.log(longlinkName)
+    var rowLongLink = [...document.getElementsByClassName('longlinkClass')]
+    var rowTable = [...document.getElementsByName('record')]
+    var checkBtn = [...document.getElementsByName('check-btn')]
+    var statusClass = [...document.getElementsByName('status-bar')]
+
+    checkBtn.forEach(btn => btn.addEventListener('click', function(e){
+        e.preventDefault()
+
+        var statusId = $(this).attr('url-id')
+        var statusLongUrl = $(this).attr('long-url')
+        var statusLinkCheck =$(this).attr('status-link-check')
+        for (i =0; i<statusClass.length;i++){
+            statusbarId = statusClass[i].getAttribute('statusBar')
+            if (statusbarId == statusLinkCheck){
+                copyStatus = copyBtn[i].getAttribute('copyStatus')
+                moreStatus = showip[i].getAttribute('moreStatus')
+                pStatus = rowLongLink[i].getAttribute('pAttr')
+                pHolder = $('#'+pStatus)
+                $.ajax({
+                    url: 'status/'+statusId,
+                    data:{
+                        statusID : statusId,
+                        statusUrl : statusLongUrl,
+                    },
+                    success: function(data){
+                        var statusHolder =  $('#'+statusLinkCheck).children()
+                        if (data == "Good"){
+                            statusHolder.fadeOut(500)
+                            setTimeout(function(){
+                                statusHolder.html("Good").removeClass().addClass("badge-success").addClass("badge").fadeIn(500)
+                            }, 500)
+                            //$('#'+statusLinkCheck).children().fadeOut(500).removeClass().fadeIn(500).html("Good").addClass("badge-success").addClass("badge")
+                            document.getElementById(copyStatus).disabled = false
+                            document.getElementById(moreStatus).disabled = false
+                            $('#'+moreStatus).removeClass().addClass("btn").addClass("more-btn")
+                            pHolder.html(statusLongUrl+" "+data)
+                        }
+                        if (data == "Bad"){
+                            statusHolder.fadeOut(500)
+                            setTimeout(function(){
+                                statusHolder.html("Bad").removeClass().addClass("badge-danger").addClass("badge").fadeIn(500)
+                            }, 500)
+                            document.getElementById(copyStatus).disabled = true
+                            document.getElementById(moreStatus).disabled = true
+                            $('#'+moreStatus).removeClass().addClass('btn more-btn-disable')
+                            pHolder.html(statusLongUrl+" " + data)
+                        }
+                        if (data == "Pending"){
+                            statusHolder.fadeOut(500)
+                            setTimeout(function(){
+                                statusHolder.html("Pending").removeClass().addClass("badge-warning").addClass("badge").fadeIn(500)
+                            }, 500)
+                            document.getElementById(copyStatus).disabled = false
+                            document.getElementById(moreStatus).disabled = false
+                            $('#'+moreStatus).removeClass().addClass('btn more-btn')
+                            pHolder.html(statusLongUrl+" "+data)
+                        }
+                        if (data == "No Server"){
+                            statusHolder.fadeOut(500)
+                            setTimeout(function(){
+                                statusHolder.html("No Server").removeClass().addClass("badge-danger").addClass("badge").fadeIn(500)
+                            }, 500)
+                            document.getElementById(copyStatus).disabled = true
+                            document.getElementById(moreStatus).disabled = true
+                            $('#'+moreStatus).removeClass().addClass('btn more-btn-disable')
+                            pHolder.html(statusLongUrl+" "+data)
+                        }
+                    }
+                })
+            }
+        }
+    }))
+
+
+
+    //const search_btn = document.getElementById('search')
+    $('#search').on('click', function (e){
+        var search_input = document.getElementById('searchfield').value
+        search_input.toLowerCase()
+        for(i =0; i <rowTable.length; i++){
+            var longUrlList = rowLongLink[i].innerHTML.toLowerCase()
+            var fadeID = rowLongLink[i].parentElement.getAttribute('data-id')
+            var fadeSearch = $("#"+fadeID)
+            
+            if (!longUrlList.includes(search_input) ){
+                fadeSearch.fadeOut(500)
+            }
+            else if (search_input === ""){
+                fadeSearch.fadeIn(500)
+            }
+            else{
+                fadeSearch.fadeIn(500)
+            }
+        }
+    })
+
+    $('#reset').on('click', function (e){
+        var search_input = document.getElementById('searchfield')
+        search_input.value = ""
+        for(i =0; i <rowTable.length; i++){
+            var longUrlList = rowLongLink[i].innerHTML.toLowerCase()
+            var fadeID = rowLongLink[i].parentElement.getAttribute('data-id')
+            var fadeSearch = $("#"+fadeID)
+            fadeSearch.fadeIn(500)
+            //rowTable[i].style.display = ""
+        }
+        
+    })
+
+    //var a = 0;
+    // showip.forEach(btn => btn.addEventListener('click', () => {
+    //     const addShort = btn.getAttribute('short-add')
+    //     const e = btn.getAttribute('more')
+    //     var r = [...document.getElementsByName('ip')]
+    //     for (var i = 0; i < r.length; i++) {
+    //         if (r[i].getAttribute('ip-row') == e) {
+    //             if (a == 0) {
+    //                 r[i].style.visibility = "visible"
+    //                 a = 1;
+    //             }
+    //             else {
+    //                 r[i].style.visibility = "collapse"
+    //                 a = 0;
+    //             }
+    //         }
+    //         else {
+    //             r[i].style.visibility = "collapse"
+    //         }
+    //     }
+    // }))
+
+    $(".delete").on("click", function (e) {
+        e.preventDefault();
+        var $this = $(this);
+        if (confirm("Are you Sure?")) {
+            $.ajax({
+                url: $this.attr("href"),
+                type: "GET",
+                dataType: "json",
+                success: function (resp) {
+                    if (resp.message === 'success') {
+                        $this.parents('.record').fadeOut("slow", function () {
+                            $this.parents('.record').remove();
+                        });
+                    }
+                    else {
+                        alert(resp.message);
+                    }
+                },
+                error: function (resp) {
+                    console.log("something is wrong");
+                }
+            });
+        }
+        return false;
+    })
+
+
+    copyBtn.forEach(btn => btn.addEventListener('click', () => {
+        btnId = btn.getAttribute('copyStatus')
+        for(i = 0; i < copyBtn2.length; i++){
+            var btnId2 = copyBtn2[i].getAttribute('copyStatus')
+            if (copyBtn2[i].getAttribute('copyStatus') == btnId){
+                var btnId3 = $("#"+btnId2)
+                btnId3.html("Copied").removeClass().addClass("btn btn-success")
+                setTimeout(function(){
+                    btnId3.html("Copy").removeClass().addClass("btn btn-primary")
+                }, 3000)
+            }
+            else{
+                $("#"+btnId2).html("Copy").removeClass().addClass("btn btn-primary")
+            }
+        }
+        const addShort = btn.getAttribute('short-add')
+        navigator.clipboard.writeText(myHostName + "/" + addShort)
+    }))
+
+    // $("#search").on("click", function (e) {
+    //     e.preventDefault();
+
+    //     $.ajax({
+    //         type: 'POST',
+    //         url: '/manage/search',
+    //         data: {
+    //             keyword: $('#searchfield').val(),
+    //             csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+    //         },
+    //         success: function (resp) {
+    //             $(".table-body").html(resp);
+    //         }
+    //     });
+    // });
+
+
+
+    // --------------------------Pop up for the IP address--------------------------------
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    // var btnID = document.getElementById("myBtn");
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+
+    var ip = JSON.parse("{{iplist|escapejs}}")
+    var objID = JSON.parse("{{idlist|escapejs}}")
+    var visitedDate = JSON.parse("{{visitlist|escapejs}}")
+    const ipTemplate = document.querySelector("[data-ip-template]")
+    var ipContainer = document.querySelector("[ip-container]")
+    var passwordlist = JSON.parse("{{passwordlist|escapejs}}")
+    var passwordID = JSON.parse("{{passwordIDlist|escapejs}}")
+    var locationList = JSON.parse("{{locationList|escapejs}}")
+    var copyPasswordBtn = [...document.getElementsByClassName('copy-password')]
+
+    for (let i = 0; i<objID.length; i++){
+        const cloneNode  = ipTemplate.content.cloneNode(true).children[0]
+        const ipContent = cloneNode.querySelector('[ip-content]')
+        const idContent = cloneNode.querySelector('[id-content]')
+        const visitedContent = cloneNode.querySelector('[visited-content]')
+        const locationContent = cloneNode.querySelector('[location-content]')
+        idContent.textContent = objID[i]
+        ipContent.textContent = ip[i]
+        visitedContent.textContent = visitedDate[i]
+        locationContent.textContent = locationList[i]
+        ipContainer.append(cloneNode)
+    }
+
+    passID = 0;
+    showip.forEach(btn => btn.addEventListener('click', () => {
+        var btnIpId = btn.getAttribute("more")
+        var ipRow = [...document.getElementsByName('ip-row')]
+        for(let i =0; i<objID.length;i++){
+            if (objID[i] == btnIpId){
+                ipRow[i].style.display = ""
+            }
+            else{
+                ipRow[i].style.display = "none"
+            }
+        }
+
+        passStyle = document.getElementById('password-display')
+        $('#password-display').html("There is no Password")
+        passStyle.style = "color:red;"
+        document.getElementById('copy-password').disabled = true
+        for (let i = 0; i<passwordID.length; i++){
+            if (passwordID[i] == btnIpId){
+                $('#password-display').html("Password: " + passwordlist[i])
+                passStyle.style = "color:black;"
+                document.getElementById('copy-password').disabled = false
+                copyPasswordBtn.forEach(btn => btn.addEventListener('click', ()=>{
+                    $('#copy-password').html('Copied').removeClass().addClass('btn btn-success')
+                    setTimeout(function(){
+                        $('#copy-password').html('Copy Password').removeClass().addClass('btn btn-primary')
+                    }, 1000)
+                    navigator.clipboard.writeText(passwordlist)
+                }))
+                break
+            }
+        }
+
+        $("#myModal").fadeIn(300)
+    }))
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        $("#myModal").fadeOut(300)
+        setTimeout(function(){
+            $('#copy-password').html('Copy Password').removeClass().addClass('btn btn-primary')
+        }, 500)
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            $("#myModal").fadeOut(300)
+            setTimeout(function(){
+                $('#copy-password').html('Copy Password').removeClass().addClass('btn btn-primary')
+            }, 500)
+        }
+    }
+</script>
+
+{%endblock%}
+
+

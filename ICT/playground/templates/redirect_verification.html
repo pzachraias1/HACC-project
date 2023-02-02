@@ -1,0 +1,113 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+        integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>URL, Shortener</title>
+
+</head>
+<style>
+    .submitBtnStyle {
+        background-color: #237d68;
+        color: aliceblue;
+    }
+
+    .submitBtnStyle:hover {
+        background-color: #175144;
+        transition: .3s;
+    }
+    .veriLabel{
+        display: none;
+        color: #ff7676;
+    }
+
+.line {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background-color: #237d68;
+}
+.load-3 .line:nth-last-child(1) {
+  animation: loading 0.6s 0.1s linear infinite;
+}
+.load-3 .line:nth-last-child(2) {
+  animation: loading 0.6s 0.2s linear infinite;
+}
+.load-3 .line:nth-last-child(3) {
+  animation: loading 0.6s 0.3s linear infinite;
+}
+@keyframes loading {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(0, 15px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+</style>
+<div class="container box-spcae url-box" style="border: 1px solid #237d68; height: auto;">
+    <div class="load-3">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+    <h1>Please type in password to continue</h1>
+    <form id="veri-form">
+        {% csrf_token %}
+        <div class="form-group box-spcae">
+            <label class="veriLabel" id="veriLabel">Enter password</label>
+
+            <div class="input-group">
+                <input class="form-control" type="password" id="vpass" name="vpass"
+                    placeholder="Enter password">
+
+                <div class="input-group-append">
+                    <button type="submit" class="btn submitBtnStyle" id="submit-btn-function">Submit</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+</form>
+
+<script>
+    $('#veri-form').ready(function () {
+        $('#submit-btn-function').click(function (e) {
+            e.preventDefault();
+            var shortC = "{{pk}}";
+            $.ajax({
+                type: 'POST',
+                url: '/verification/',
+                data: {
+                    password: $('#vpass').val(),
+                    shortcode: shortC,
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                },
+                success: function (data) {
+                    if(data == "wrong"){
+                        document.getElementById("veriLabel").style.display = "inline"
+                        $('#veriLabel').text("Password is incorrect. Please try again!")
+                    }else{
+                        window.location = data
+                    }
+                }
+            });
+        })
+    })
+</script>
+</html>

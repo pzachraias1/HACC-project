@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{%load static%}
+{% block content %}
+
+<style>
+    .piechart {
+      padding-top: 15px;
+      padding-bottom: 5px;
+      display: flex;
+      justify-content: center;
+      margin-left: auto;
+      margin-right: auto;
+        
+    }
+    .bargraph{
+      padding-top: 15px;
+      /* padding-bottom: 5px; */
+      display: flex;
+      justify-content: center;  
+      height: 500px;
+      width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+
+    .paragraph{
+      /* padding-top: 5px; */
+      padding-bottom: 5px;
+      display: flex;
+      justify-content: center;
+    }
+
+    #map {
+      justify-content: center;
+      padding-top: 30px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 1000px;
+      height: 500px;
+      padding-bottom: 30px;
+      }
+    .marker {
+      background-image: url("{% static '/locationicon.png' %}");
+      background-size: cover;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .graphtitle{
+      padding-top: 3%;
+      text-align: center;
+    }
+    
+</style>
+
+<div class="graphtitle">
+  <h2>Click Count</h2>
+</div>
+<div class="piechart">
+    <canvas id="pie-chart" width="400" height="150"></canvas>
+</div>
+<div class="paragraph">
+  <p>This pie chart shows a visualization of the amount of clicks that each shortened link has received.
+    The more clicks a link has the more popular the link is.</p>
+</div>
+
+<div class="graphtitle">
+  <h2>URL Status</h2>
+</div>
+<div class="bargraph">
+  <canvas id="bar-chart" width="250" height="100"></canvas>
+</div>
+<div class="paragraph">
+  <p>This bar chart shows a visualization of the URL status of Good, Pending, and Bad.</p>
+  <p>This information is useful to gain an understanding of how many links require attention</p>
+</div>
+<div class="graphtitle">
+  <h2>Users Location Map</h2>
+</div>
+<div id='map'></div>
+<div class="paragraph">
+  <p>This map shows the location of users IP address when they use one of the short links.</p>
+</div>
+  
+  <script>
+    //Pie chart for visualizing click count data
+    var config = {
+      type: 'pie',
+      data: {
+        datasets: [{
+          data: {{data|safe}},
+          backgroundColor: [
+          'rgba(255, 99, 132, 0.2)', 
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+          ],
+          borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1,
+          label: 'Click Count'
+        }],
+        labels: {{labels|safe}}
+      },
+      options: {
+        responsive: true
+      }
+    };
+    // Bar graph for visualizing link statuses  
+    var statusGraph = {
+      type: 'bar',
+      data: {
+        datasets: [{
+          data: {{bardata|safe}},
+          backgroundColor: [
+          'rgba(255, 99, 132, 0.2)', 
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+          ],
+
+          borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1,
+          label: 'Url Health Status'
+        }],
+        labels: {{barlabels|safe}}
+      },
+      options: {
+        responsive: true
+      }
+    };
+
+    window.onload = function() {
+      var ctx = document.getElementById('pie-chart').getContext('2d');
+      window.myPie = new Chart(ctx, config);
+      var ctxbar = document.getElementById('bar-chart').getContext('2d');
+      window.bar = new Chart(ctxbar, statusGraph);
+    };
+  
+  var longitude = JSON.parse("{{longitude|escapejs}}")
+  var latitude = JSON.parse("{{latitude|escapejs}}")
+    
+  mapboxgl.accessToken = 'pk.eyJ1IjoiemVla2c5MzM1IiwiYSI6ImNsYXlzZjNsOTEyZXEzdm9hNW4xNzY3ajkifQ.JYaff-qpuTmeWrHCXbl-yw';
+  var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v11',
+    center: [-157.74481431244328,21.390126930766918],
+    zoom: 1
+  });
+    const array =[]
+    for (let i = 0; i < longitude.length; i++){
+        const el = document.createElement('div');
+        el.className = 'marker';
+       if(!isNaN(longitude[i])){
+        array[i] = [longitude[i], latitude[i]]
+
+       }
+        console.log(array[i])
+        new mapboxgl.Marker(el).setLngLat(array[i]).addTo(map);
+    }
+
+  </script>
+
+{% endblock %}
+

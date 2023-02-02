@@ -1,0 +1,68 @@
+
+    <table class="table table-body">
+        <thead>
+            <tr class="table-header">
+                <th class="">Creation Date</th>
+                <th class="">Visited</th>
+                <th>Status</th>
+                <th class="short-url-head">Short URL</th>
+                <th class="long-url-head"
+                    style="border-left-style: solid;border-left-color: rgba(121, 121, 121, 0.686)">Long
+                    URL</th>
+                <th class="btn-head"></th>
+            </tr>
+        </thead>
+        <tbody class="table-body">
+            {%for instance in object_list %}
+            <tr class="record">
+                <td style="text-align: center;">{{instance.creationDate}}</td>
+                <td style="text-align: center;">{{instance.clicks}}</td>
+                <td style="text-align: center;">
+                    
+                    {%if instance.status == "Good"%}
+                    <span class="badge badge-success">{{instance.status}}</span>
+                    {%elif instance.status == "Bad"%}
+                    <span class="badge badge-danger">{{instance.status}}</span>
+                    {%else%}
+                    <span class="badge badge-warning">{{instance.status}}</span>
+                    {%endif%}
+                
+                </td>
+                <td class="">https://etsurl.com/{{instance.shortCode}}</td>
+                <td class="" style="border-left-style: solid; border-left-color: rgba(121, 121, 121, 0.686);">
+                    {% if instance.longLink|length > 30%}
+                    {{instance.longLink|slice:"0:30"}}....................
+                    {%else%}
+                    {{instance.longLink}}
+                    {%endif%}
+                </td>
+                <td class="">
+                    <a href="{%url 'delete_data' instance.id%}" id="delete" class=" delete btn btn-danger"
+                    style="height:35px; opacity: 100%;">Delete</a>
+                    <button name="copy" class="btn btn-primary copy-btn" style="height:35px;"
+                    short-add={{instance.shortCode}}>Copy</button>
+                    <button name="show-ip" class="btn more-btn" more={{instance.id}}>More</button>
+                    <a href="{%url 'status_get' instance.id%}" class="btn more-btn check" name="check-btn">Check</a>
+                    <!-- <button class="btn more-btn" name="check-btn" long-url={{instance.longLink}}>Check</button> -->
+                </td>
+            </tr>
+            <tr class="ip-display" ip-row="{{instance.id}}" name="ip">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+                    {%if instance.clicks == 0%}
+                    <li>404 - IP ADDRESS NOT FOUND</li>
+                    {%endif%}
+                    {%for i in ipset_list %}
+                    {%if i.shortCode == instance %}
+                    <li>{{i.ip_address}}</li>
+                    {%endif%}
+                    {%endfor%}
+                </td>
+                <td></td>
+                <td></td>
+            </tr>
+            {%endfor %}
+        </tbody>
+    </table>

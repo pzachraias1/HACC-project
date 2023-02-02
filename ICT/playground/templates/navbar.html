@@ -1,0 +1,88 @@
+{% load static %}
+
+<style>
+  .nav-link{
+    opacity: 100%;
+  }
+  .nav-link:hover{
+    border-bottom: solid 3px rgb(255, 255, 255);
+    color: cornsilk;
+    opacity: 80%;
+  }
+  .drop-menu{
+    width: 100px;
+    text-align: center;
+    display: none;
+  }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light sticky-top" style="background-color: #237d68;">
+    <a class="navbar-brand" href="index.html"></a>
+    <img src="{% static '/logo.png' %}" width="510" height="80" class="d-inline-block align-top" alt="banner" style="padding-right: 30px;"> 
+    </a>
+
+    <div style="align-items: center;">
+      <button class="navbar-toggler drop-btn" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="drop-menu" id="drop-id">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a style ="text-align: center; color:white;" class="navbar-brand nav-link" href="/">Home<span class="sr-only">(current)</span></a>
+          </li>
+          
+          <li class="nav-item active">
+            <a style ="text-align: center; color: white;" class="nav-link navbar-brand" href="/manage/">URL Links<span class="sr-only">(current)</span></a>
+          </li>
+          
+          <li class="nav-item active">
+            <a style ="text-align: center; color: white;" class="nav-link navbar-brand" href="/analytics/">Analytics<span class="sr-only">(current)</span></a>
+          </li>
+          
+          <li class="nav-item active">
+            <a style ="text-align: center; color:white;" class="nav-link navbar-brand" href="{% url 'logoutUser' %}">Logout<span class="sr-only">(current)</span></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a style ="text-align: center; color: white;" class="navbar-brand nav-link" href="/">Home<span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active">
+          <a style ="text-align: center; color: white;" class="nav-link navbar-brand" href="/manage/">URL Links<span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item active">
+            <a style ="text-align: center; color: white;" class="nav-link navbar-brand" href="/analytics/">Analytics<span class="sr-only">(current)</span></a>
+            </li>
+
+          <li class="nav-item active">
+            <a style ="text-align: center; color: white;" class="nav-link navbar-brand" href="{% url 'logoutUser' %}">Logout<span class="sr-only">(current)</span></a>
+          </li>
+      </ul>
+
+        <span id="hellomsg"> <h5 style="color:white">Aloha, @{{request.user}}</h5></span> 
+    </div>
+  </nav>
+
+  <script>
+    var turn = 0;
+    $('.drop-btn').on('click', function(e){
+      e.preventDefault();
+      var box = document.getElementById("drop-id")
+      if (turn == 0){
+        console.log("working")
+        box.style.display="inline"
+        box.style.transition = "0.7s"
+        return turn = 1;
+      }
+      else{
+        console.log("also working")
+        box.style.display = "none"
+        return turn= 0;
+      }
+    })
+  </script>
